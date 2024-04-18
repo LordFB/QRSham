@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#000000" />
+    <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/skeleton/2.0.4/skeleton.min.css'
+        integrity='sha512-EZLkOqwILORob+p0BXZc+Vm3RgJBOe1Iq/0fiI7r/wJgzOFZMlsqTa29UEl6v6U6gsV4uIpsNZoV32YZqrCRCQ=='
+        crossorigin='anonymous' />
+    <title>Scanner voor CoronaCheck</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        body {
+            background-color: #000;
+        }
+
+        #scan {
+            display: block;
+            position: relative;
+            left: 10vw;
+            width: 80vw;
+            height: 80vw;
+            overflow: hidden !important;
+            box-sizing: border-box;
+            border: 1px solid red;
+            border-radius: 25px;
+        }
+
+        video {
+            position: relative;
+            display: block;
+            z-index: 8888;
+            width: 100%;
+            height: auto;
+            border-radius: 25px;
+            background: #000;
+            overflow: hidden !important;
+        }
+
+        #debug {
+            color: #FFF;
+            position: fixed;
+            left: 10px;
+            top: 10px;
+            z-index: 9999;
+        }
+
+        #overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 9999;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        #scanneroverlay {
+            display:none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 9999;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        #scanneroverlay>h2 {
+            padding: 25px;
+            color: #FFF;
+            font-size: 20px;
+            font-weight: 400;
+            text-align: center;
+        }
+
+        #scanneroverlay>h2>span {
+            float: left;
+        }
+
+        #scansub {
+            color: #FFF;
+            text-align: center;
+            font-weight: 400;
+            text-decoration: underline;
+            margin-top: 100px;
+        }
+        #intro {
+            display:block;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 9999;
+            width: 100vw;
+            height: 100vh;
+            text-align: center;
+        }
+        #intro>h2 {
+            padding: 25px;
+            color: #FFF;
+            font-size: 20px;
+            font-weight: 400;
+            text-align: center;
+        }
+
+        #fsbut, #scanbut{
+            color: #FFF;
+        }
+        #scanbut{
+            display:none;
+            margin:0px auto;
+        }
+
+        #detailcheck{
+            display:none;
+            width:100vw;
+            height:100vh;
+            position:fixed;
+            top:0;
+            left:0;
+            background:#FFF;
+            text-align:center;
+        }
+
+        #details{
+            padding:50px;
+        }
+
+        #details > *{
+            width:100%;
+        }
+
+        #details > label, #details > div > label{
+            font-size:10px;
+            text-align: left;
+        }
+
+        #details > input, #details > div > input{
+            border:2px solid #CCC;
+            text-align:center;
+            font-size:24px;
+            padding:25px;
+        }
+
+        #details > div{
+            float:left;
+        }
+
+        .whiteblue{
+            color:#1640ec;
+            border: 1px solid #1640ec;
+            border-radius:25px;
+            width:80vw;
+        }
+
+        .bluewhite{
+            background: #1640ec;
+            color:#FFF;
+            border-radius:25px;
+            width:80vw;
+        }
+
+        #fuckingvinkje{
+            display:none;
+            width:100vw;
+            height:100vh;
+            position:fixed;
+            top:0;
+            left:0;
+            background:#3fec96 url(fuckingvinkje.png);
+            background-size:contain;
+            text-align:center;
+        }
+
+    </style>
+</head>
+
+<body>
+    <div id="overlay">
+        <div id="intro">
+            <h2>Scan QR-code</h2>
+            <button id="fsbut" onclick="openFullscreen()">Open Volledig Scherm</button>
+            <button id="scanbut" onclick="newScan()">QR Code Scannen</button>
+        </div>
+        <div id="scanneroverlay">
+            <h2><span>&larr;</span>Scan QR-code</h2>
+            <span id="scan">
+                <video></video>
+            </span>
+            <p id="scansub">Waar moet ik op letten?</p>
+        </div>
+        <div id="detailcheck">
+            <div style="background:#ebebeb; height:0px;line-height:90px; padding:50px 25px;">
+                <h2 style="text-align:center; font-size:19px; font-weight:bold;"><span style="float:left;">×</span>Controleer identiteitsbewijs</h2>
+            </div>
+            <div id="details">
+                <label>Achternaam</label>
+                <input type="text" value="J" />
+                <label>Voornaam</label>
+                <input type="text" value="-" disabled style="background:#ebebeb;"/>
+                <div style="width:30%;">
+                    <label>Geboortedag</label>
+                    <input style="width:100%;" type="text" value="02"/>
+                </div>
+                <div style="width:60%; margin-left:5%;">
+                <label>Geboortemaand</label>
+                <input type="text" value="AUG (08)" style="width:100%;"/>
+            </div>
+                <p style="color:#CCC; font-weight:bold; text-align:center; font-size:12px;">Let op: identiteiscontrole is verplicht</p>
+            </div>
+            <button class="whiteblue">Er klopt iets niet</button>
+            <button id="complete" class="bluewhite">Gegevens kloppen</button>
+        </div>
+        <div id="fuckingvinkje">
+
+        </div>
+    </div>
+    <script src="qrreader.js"></script>
+    <script>
+
+        let vid = document.querySelector('video');
+        let scanDiv = document.getElementById('scanneroverlay');
+        let introDiv = document.getElementById('intro');
+        let detailsDiv = document.getElementById('detailcheck');
+        let vinkjediv = document.getElementById('fuckingvinkje');
+        const scanner = new QrScanner(vid, result => console.log(result));
+        scanner.start();
+
+        /* Get the documentElement (<html>) to display the page in fullscreen */
+        var elem = document.documentElement;
+
+        /* View in fullscreen */
+        function openFullscreen() {
+            if (elem.requestFullscreen) {
+                elem.requestFullscreen();
+            } else if (elem.webkitRequestFullscreen) {
+                /* Safari */
+                elem.webkitRequestFullscreen();
+            } else if (elem.msRequestFullscreen) {
+                /* IE11 */
+                elem.msRequestFullscreen();
+            }
+            document.getElementById('fsbut').style.display = 'none';
+            document.getElementById('scanbut').style.display = 'block';
+        }
+
+        document.getElementById('scanbut').addEventListener('click', (e)=>{
+            scanDiv.style.display = 'block';
+            introDiv.style.display = 'none';
+        });
+        document.getElementById('scansub').addEventListener('click', (e)=>{
+            scanDiv.style.display = 'none';
+            introDiv.style.display = 'none';
+            detailsDiv.style.display = 'block';
+
+        });
+        document.getElementById('complete').addEventListener('click', (e)=>{
+            scanDiv.style.display = 'none';
+            detailsDiv.style.display = 'none';
+            vinkjediv.style.display = 'block';
+        });
+        vinkjediv.addEventListener('click', (e)=>{
+            scanDiv.style.display = 'none';
+            detailsDiv.style.display = 'none';
+            vinkjediv.style.display = 'none';
+            introDiv.style.display = 'block';
+        });
+
+    </script>
+</body>
+
+</html>
+<!-- You can't punish those you can't see -->
